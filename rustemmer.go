@@ -7,9 +7,7 @@ import (
 	"sync"
 )
 
-var (
-	st = New()
-)
+var instance = New()
 
 const (
 	VOWEL = "аеёиоуыэюя"
@@ -31,13 +29,14 @@ const (
 
 
 type RuStemmer struct {
-	sync.Mutex
+	mu sync.Mutex
 	word []rune
 	RV int
 	R2 int
 
 }
 
+// New creates a new RuStemmer.
 func New() *RuStemmer {
 	return &RuStemmer{
 		word: []rune(""),
@@ -47,9 +46,14 @@ func New() *RuStemmer {
 }
 
 // GetWordBase returns the base word.
+func GetWordBase(word string) string {
+	instance.mu.Lock()
+	defer instance.mu.Unlock()
+	return instance.GetWordBase(word)
+}
+
+// GetWordBase returns the base word.
 func (r *RuStemmer) GetWordBase(word string) string {
-	r.Lock()
-	defer r.Unlock()
 	r.word = []rune(word)
 	r.RV = 0
 	r.R2 = 0

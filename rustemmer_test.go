@@ -6,7 +6,6 @@ import (
 )
 
 func TestStemmer(t *testing.T) {
-	s := New()
 	testWords := map[string]string{
 		"результаты"   : "результат",
 		"в"            : "в",
@@ -72,7 +71,7 @@ func TestStemmer(t *testing.T) {
 	}
 
 	for word, base := range testWords {
-		testBase := s.GetWordBase(word)
+		testBase := GetWordBase(word)
 		if !reflect.DeepEqual(base, testBase) {
 			t.Errorf("Not equal: [%s] %s != %s", word, base, testBase)
 		}
