@@ -14,6 +14,11 @@ Usage
     // wordBase = "ваз"
 ```
 
+Requirements
+-----------
+
+* Need at least `go1.2` or newer.
+
 Documentation
 -----------
 
