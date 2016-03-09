@@ -9,9 +9,20 @@ Installation
 
 Usage
 -----------
+Getting base word:
 ```go
     wordBase := rustemmer.GetWordBase("вазы")
     // wordBase = "ваз"
+```
+
+Normalization of the text:
+```go
+    text := "г. Москва, ул. Полярная, д. 31А, стр. 1"
+    fmt.Print(
+        rustemmer.NormalizeText(text),
+    )
+    // Displays:
+    // г Москв ул Полярн д 31А стр 1
 ```
 
 Requirements
