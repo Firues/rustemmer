@@ -52,6 +52,15 @@ func GetWordBase(word string) string {
 	return instance.GetWordBase(word)
 }
 
+// NormalizeText returns normalized text.
+// Returns text in which all words will be replaced with the basics of words separated by a space.
+// All Special characters except "_" will be removed.
+func NormalizeText(text string) string {
+	instance.mu.Lock()
+	defer instance.mu.Unlock()
+	return instance.NormalizeText(text)
+}
+
 // GetWordBase returns the base word.
 func (r *RuStemmer) GetWordBase(word string) string {
 	r.word = []rune(word)
@@ -97,6 +106,19 @@ func (r *RuStemmer) GetWordBase(word string) string {
 	r.removeEndings([]string{REGEX_SOFT_SIGN}, r.RV)
 
 	return string(r.word)
+}
+
+// NormalizeText returns normalized text.
+// Returns text in which all words will be replaced with the basics of words separated by a space.
+// All Special characters except "_" will be removed.
+func (r *RuStemmer) NormalizeText(text string) string {
+	regexWords := regexp.MustCompile("[\\p{L}\\d_]+")
+	words := regexWords.FindAllString(text, -1)
+	for k, word := range words {
+		words[k] = r.GetWordBase(word)
+	}
+
+	return strings.Join(words, " ")
 }
 
 func (r *RuStemmer) removeEndings(regex []string, region int) bool {

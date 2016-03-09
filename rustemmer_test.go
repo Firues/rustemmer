@@ -5,7 +5,7 @@ import (
 	"reflect"
 )
 
-func TestStemmer(t *testing.T) {
+func TestGetWordBase(t *testing.T) {
 	testWords := map[string]string{
 		"результаты"   : "результат",
 		"в"            : "в",
@@ -74,6 +74,25 @@ func TestStemmer(t *testing.T) {
 		testBase := GetWordBase(word)
 		if !reflect.DeepEqual(base, testBase) {
 			t.Errorf("Not equal: [%s] %s != %s", word, base, testBase)
+		}
+	}
+}
+
+func TestNormalizeText(t *testing.T) {
+	testTexts := map[string]string{
+		"Результаты проверки города в DB: \"Санкт-Петербурга\" не нашлось!" : "Результат проверк город в DB Санкт Петербург не нашл",
+		"Важная новость (!) В вагоне метро заклинило вал"                   : "Важн новост В вагон метр заклин вал",
+		"Глава СКР: спортсменам могли умышленно подбросить мельдоний"       : "Глав СКР спортсмен могл умышлен подброс мельдон",
+		"Ограничения на участке Калужско-Рижской линии"                     : "Ограничен на участк Калужск Рижск лин",
+		"г. Москва, ул. Полярная, д. 31А, стр. 1"                           : "г Москв ул Полярн д 31А стр 1",
+		"Планшет DIGMA Optima 7.13, 8GB темно-синий"                        : "Планшет DIGMA Optima 7 13 8GB темн син",
+		"Планшет IRU Pad Master B703, 4Гб, Wi-Fi, Android 4.1 [v13pro]"     : "Планшет IRU Pad Master B703 4Гб Wi Fi Android 4 1 v13pro",
+	}
+
+	for text, testText := range testTexts {
+		normalizedText := NormalizeText(text)
+		if !reflect.DeepEqual(testText, normalizedText) {
+			t.Errorf("Not equal: %s != %s", testText, normalizedText)
 		}
 	}
 }
