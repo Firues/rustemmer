@@ -1,7 +1,7 @@
 # rustemmer
 Golang implementation Porter Stemming for Russian language.
 
-[![Build Status](https://travis-ci.org/syndtr/goleveldb.png?branch=master)](https://travis-ci.org/liderman/rustemmer)
+[![Build Status](https://travis-ci.org/liderman/rustemmer.svg?branch=master)](https://travis-ci.org/liderman/rustemmer)
 
 Installation
 -----------
