@@ -34,3 +34,22 @@ Documentation
 -----------
 
 You can read package documentation [here](http:godoc.org/github.com/liderman/rustemmer).
+
+Testing
+-----------
+Unit-tests:
+```bash
+go test -v
+```
+
+Benchmarks:
+```bash
+go test -test.bench .
+```
+The test result on computer mac-mini 2012 (Intel Core i5):
+```
+PASS
+BenchmarkNormalizeText-4             300           5517800 ns/op
+BenchmarkGetWordBase-4                50          27494568 ns/op
+ok      /src/github.com/liderman/rustemmer      3.697s
+```
