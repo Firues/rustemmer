@@ -9,31 +9,44 @@ import (
 
 var instance = New()
 
-const (
-	VOWEL = "аеёиоуыэюя"
-	REGEX_ADJECTIVE = "(ее|ие|ые|ое|ими|ыми|ей|ий|ый|ой|ем|им|ым|ом|его|ого|ему|ому|их|ых|ую|юю|ая|яя|ою|ею)$"
-	REGEX_SOFT_SIGN = "ь$"
-	REGEX_NN = "нн$"
-	REGEX_I = "и$"
-	REGEX_REFLEXIVES = "(ся|сь)$"
-	REGEX_NOUN = "(а|ев|ов|ие|ье|е|иями|ями|ами|еи|ии|и|ией|ей|ой|ий|й|иям|ям|ием|ем|ам|ом|о|у|ах|иях|ях|ы|ь|ию|ью|ю|ия|ья|я)$"
-	REGEX_SUPERLATIVE = "(ейш|ейше)$"
-	REGEX_DERIVATIONAL = "(ост|ость)$"
-	REGEX_PERFECTIVE_GERUNDS_1 = "(в|вши|вшись)$"
-	REGEX_PERFECTIVE_GERUNDS_2 = "(ив|ивши|ившись|ыв|ывши|ывшись)$"
-	REGEX_PARTICIPLE_1 = "(ем|нн|вш|ющ|щ)"
-	REGEX_PARTICIPLE_2 = "(ивш|ывш|ующ)"
-	REGEX_VERB_1 = "(ла|на|ете|йте|ли|й|л|ем|н|ло|но|ет|ют|ны|ть|ешь|нно)$"
-	REGEX_VERB_2 = "(ила|ыла|ена|ейте|уйте|ите|или|ыли|ей|уй|ил|ыл|им|ым|ен|ило|ыло|ено|ят|ует|уют|ит|ыт|ены|ить|ыть|ишь|ую|ю)$"
-)
+const VOWEL = "аеёиоуыэюя"
 
+var suffixNN = []string{"нн"}
+var suffixPerfectiveGerunds = [][]string{
+	{"в", "вши", "вшись", "в", "вши", "вшись"},
+	{"ив", "ивши", "ившись", "ыв", "ывши", "ывшись"},
+}
+var suffixReflexives = []string{"ся", "сь"}
+var suffixAdjective = []string{
+	"ее", "ие", "ые", "ое", "ими", "ыми", "ей", "ий", "ый", "ой", "ем", "им", "ым", "ом", "его", "ого", "ему",
+	"ому", "их", "ых", "ую", "юю", "ая", "яя", "ою", "ею",
+}
+var suffixVerb = [][]string{
+	{"ла", "на", "ете", "йте", "ли", "й", "л", "ем", "н", "ло", "но", "ет", "ют", "ны", "ть", "ешь", "нно"},
+	{
+		"ила", "ыла", "ена", "ейте", "уйте", "ите", "или", "ыли", "ей", "уй", "ил", "ыл", "им", "ым", "ен",
+		"ило", "ыло", "ено", "ят", "ует", "уют", "ит", "ыт", "ены", "ить", "ыть", "ишь", "ую", "ю",
+	},
+}
+
+var suffixNoun = []string{
+	"а", "ев", "ов", "ие", "ье", "е", "иями", "ями", "ами", "еи", "ии", "и", "ией", "ей", "ой", "ий", "й", "иям",
+	"ям", "ием", "ем", "ам", "ом", "о", "у", "ах", "иях", "ях", "ы", "ь", "ию", "ью", "ю", "ия", "ья", "я",
+}
+var suffixSuperlative = []string{"ейш", "ейше"}
+var suffixSoftSign = []string{"ь"}
+var suffixI = []string{"и"}
+var suffixDerivational = []string{"ост", "ость"}
+var suffixParticiple = [][]string{
+	appendPrefix(suffixAdjective, []string{"ем", "нн", "вш", "ющ", "щ"}),
+	appendPrefix(suffixAdjective, []string{"ивш", "ывш", "ующ"}),
+}
 
 type RuStemmer struct {
 	mu sync.Mutex
 	word []rune
 	RV int
 	R2 int
-
 }
 
 // New creates a new RuStemmer.
@@ -70,40 +83,41 @@ func (r *RuStemmer) GetWordBase(word string) string {
 
 	// Step 1
 	// Find ending PERFECTIVE GERUND. If it exists - delete it and complete this step
-	if !r.removeEndings([]string{REGEX_PERFECTIVE_GERUNDS_1, REGEX_PERFECTIVE_GERUNDS_2}, r.RV) {
+	if !r.removeEndings(r.RV, suffixPerfectiveGerunds[0], suffixPerfectiveGerunds[1]) {
 		// Otherwise, remove ending REFLEXIVE (if it exists)
-		r.removeEndings([]string{REGEX_REFLEXIVES}, r.RV)
+		r.removeEndings(r.RV, suffixReflexives)
 		// Then try the following procedure to remove ending: ADJECTIVE, VERB, NOUN.
 		// As soon as one of them is found - a step ends
 		ife := r.removeEndings(
-			[]string{
-				REGEX_PARTICIPLE_1 + REGEX_ADJECTIVE,
-				REGEX_PARTICIPLE_2 + REGEX_ADJECTIVE,
-			},
 			r.RV,
-		) || r.removeEndings([]string{REGEX_ADJECTIVE}, r.RV)
+			suffixParticiple[0],
+			suffixParticiple[1],
+		) || r.removeEndings(r.RV, suffixAdjective)
 
-		if !ife && !r.removeEndings([]string{REGEX_VERB_1, REGEX_VERB_2}, r.RV) {
-			r.removeEndings([]string{REGEX_NOUN}, r.RV)
+		if !ife && !r.removeEndings(r.RV, suffixVerb[0], suffixVerb[1]) {
+			r.removeEndings(r.RV, suffixNoun)
 		}
 	}
 
 	// Step 2
 	// If a word ends with "и" - remove the "и"
-	r.removeEndings([]string{REGEX_I}, r.RV)
+	r.removeEndings(r.RV, suffixI)
+
 	// Step 3
 	// If in "R2" there DERIVATIONAL ending - delete it
-	r.removeEndings([]string{REGEX_DERIVATIONAL}, r.R2)
+	r.removeEndings(r.R2, suffixDerivational)
+
 	// Step 4
 	// Possible is one of the three variants:
 	// If a word ending in "нн" - delete the last letter
-	if r.removeEndings([]string{REGEX_NN}, r.RV) {
+	if r.removeEndings(r.RV, suffixNN) {
 		r.word = []rune(string(r.word) + "н")
 	}
+
 	// If a word ending in SUPERLATIVE - remove it and remove the last letter again if the word ending in "нн"
-	r.removeEndings([]string{REGEX_SUPERLATIVE}, r.RV)
+	r.removeEndings(r.RV, suffixSuperlative)
 	// If a word ending in "ь" - delete it
-	r.removeEndings([]string{REGEX_SOFT_SIGN}, r.RV)
+	r.removeEndings(r.RV, suffixSoftSign)
 
 	return string(r.word)
 }
@@ -121,34 +135,63 @@ func (r *RuStemmer) NormalizeText(text string) string {
 	return strings.Join(words, " ")
 }
 
-func (r *RuStemmer) removeEndings(regex []string, region int) bool {
+func (r *RuStemmer) removeEndings(region int, suffixesPacks ...[]string) bool {
 	if region > len(r.word) {
 		region = len(r.word)
 	}
 
 	prefix := r.word[:region]
-	word_ := r.word[len(prefix):]
-	if len(regex) > 1 {
-		if regexp.MustCompile(".+[а|я]" + regex[0]).MatchString(string(word_)) {
-			r.word = []rune(string(prefix) + regexp.MustCompile(regex[0]).ReplaceAllString(string(word_), ""))
+	word_ := string(r.word[len(prefix):])
+
+	suffixes := suffixesPacks[0]
+	if len(suffixesPacks) == 2 {
+		if result := trimFirstSuffix(word_, suffixes, true); result != word_ {
+			r.word = []rune(string(prefix) + result)
 			return true
 		}
-		regex = []string{regex[1]}
+		suffixes = suffixesPacks[1]
 	}
 
-	if regexp.MustCompile(".+" + regex[0]).MatchString(string(word_)) {
-		r.word = []rune(string(prefix) + regexp.MustCompile(regex[0]).ReplaceAllString(string(word_), ""))
+	if result := trimFirstSuffix(word_, suffixes, false); result != word_ {
+		r.word = []rune(string(prefix) + result)
 		return true
 	}
+
 	return false
+}
+
+func appendPrefix(strs []string, prefixesPacks ...[]string) []string {
+	ret := []string{}
+	for _, str := range strs {
+		for _, prefixes := range prefixesPacks {
+			for _, prefix := range prefixes {
+				ret = append(ret, prefix + str)
+			}
+		}
+	}
+
+	return ret
+}
+
+func trimFirstSuffix(word string, suffixes []string, isAYA bool) string {
+	for _, suffix := range suffixes {
+		if isAYA && !(strings.HasSuffix(word, "а" + suffix) || strings.HasSuffix(word, "я" + suffix)) {
+			continue
+		}
+
+		if result := strings.TrimSuffix(word, suffix); result != word {
+			return result
+		}
+	}
+	return word
 }
 
 func (r *RuStemmer) findRegions() {
 	state := 0
 	wordLength := len(r.word)
 	for i := 1; i < wordLength; i++ {
-		prevChar := r.word[i - 1]
-		char     := r.word[i]
+		prevChar := string(r.word[i - 1])
+		char     := string(r.word[i])
 		switch state {
 			case 0:
 				if r.isVowel(char) {
@@ -171,6 +214,6 @@ func (r *RuStemmer) findRegions() {
 	}
 }
 
-func (r *RuStemmer) isVowel(char rune) bool {
-	return strings.Contains(VOWEL, string(char))
+func (r *RuStemmer) isVowel(char string) bool {
+	return strings.Contains(VOWEL, char)
 }
