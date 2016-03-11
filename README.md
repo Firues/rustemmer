@@ -49,7 +49,7 @@ go test -test.bench .
 The test result on computer mac-mini 2012 (Intel Core i5):
 ```
 PASS
-BenchmarkNormalizeText-4             300           5517800 ns/op
-BenchmarkGetWordBase-4                50          27494568 ns/op
-ok      /src/github.com/liderman/rustemmer      3.697s
+BenchmarkNormalizeText-4            5000            304275 ns/op
+BenchmarkGetWordBase-4              2000           1176104 ns/op
+ok      /src/github.com/liderman/rustemmer      4.043s
 ```
