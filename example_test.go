@@ -5,13 +5,13 @@ import (
 	"github.com/liderman/rustemmer"
 )
 
-func Example_GetWordBase() {
+func ExampleGetWordBase() {
 	word := "вазы"
 	wordBase := rustemmer.GetWordBase(word)
 	fmt.Printf("%s => %s!\n", word, wordBase)
 }
 
-func Example_NormalizeText() {
+func ExampleNormalizeText() {
 	text := "г. Москва, ул. Полярная, д. 31А, стр. 1"
 	fmt.Printf(
 		"%s => %s!\n",
